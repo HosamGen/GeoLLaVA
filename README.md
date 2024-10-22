@@ -33,13 +33,13 @@ pip install -r requirements.txt
 ```
 
 ## GeoLLaVA Custom Dataset
-Please refer to [fMoW](https://github.com/fMoW/dataset) for the original dataset images.
+[OPTIONAL] Please refer to [fMoW](https://github.com/fMoW/dataset?tab=readme-ov-file) for downloading the original dataset images.
 The cleaned annotations can be found in the [Annotations]() section.
 
 > [!IMPORTANT]
 > The full 100k annotations are too large, and are available on [Drive](https://mbzuaiac-my.sharepoint.com/:f:/g/personal/hosam_elgendy_mbzuai_ac_ae/Es2IRaXpBPRAk2gX6J5IDsgBBttITHCHbxpr4FIcRVWleg?e=pCKhFH)
 
-The videos can be found on [Drive](https://mbzuaiac-my.sharepoint.com/:f:/g/personal/hosam_elgendy_mbzuai_ac_ae/Es2IRaXpBPRAk2gX6J5IDsgBBttITHCHbxpr4FIcRVWleg?e=pCKhFH) and can be unzipped with:
+The videos used in this work can be found on [Drive](https://mbzuaiac-my.sharepoint.com/:f:/g/personal/hosam_elgendy_mbzuai_ac_ae/Es2IRaXpBPRAk2gX6J5IDsgBBttITHCHbxpr4FIcRVWleg?e=pCKhFH) and can be unzipped with:
 
 ```Shell
 unzip updated_train_videos.zip
