@@ -33,7 +33,7 @@ pip install -r requirements.txt
 ```
 
 ## GeoLLaVA Custom Dataset
-Please refer to [Model Zoo](https://github.com/mbzuai-oryx/GeoChat/blob/main/docs/MODEL_ZOO.md) for the original dataset images.
+Please refer to [fMoW](https://github.com/fMoW/dataset) for the original dataset images.
 The cleaned annotations can be found in the [Annotations]() section.
 
 > [!IMPORTANT]
