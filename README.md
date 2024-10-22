@@ -1,58 +1,63 @@
 # GeoLLaVA: Efficient Fine-Tuned Vision-Language Models for Temporal Change Detection in Remote Sensing 🌍
 
-
-GeoLLaVA aims to enhance vision-language models for detecting temporal changes in remote sensing data using fine-tuning techniques like LoRA and QLoRA, achieving significant improvements in accuracy for environmental and urban monitoring tasks.
+GeoLLaVA is designed to enhance vision-language models (VLMs) for detecting temporal changes in remote sensing data. By leveraging fine-tuning techniques like LoRA and QLoRA, it significantly improves model performance in tasks such as environmental monitoring and urban planning, especially in detecting geographical landscape evolution over time.
 
 #### [Hosam Elgendy](), [Ahmed Sharshar](), [Ahmed Aboeitta](), [Yasser Ashraf]() and [Mohsen Guizani]()
 #### Mohamed bin Zayed University of AI (MBZUAI)
+
 ---
 <p align='center'>
 <img src="assets/Overview.jpg" height="400">
 </p>
 
 ---
+
 ## Contents
 - [Setup](#setup)
 - [Dataset](#dataset)
-- [Finetune](#train)
+- [Training](#training)
 - [Evaluation](#evaluation)
+- [Results](#results)
+- [Acknowledgments](#acknowledgments)
+
+---
 
 ## Setup
 
-1. Clone this repository 
-```shell
-git clone https://github.com/HosamGen/GeoLLaVA.git
-cd GeoLLaVA
-```
+1. Clone this repository:
+    ```shell
+    git clone https://github.com/HosamGen/GeoLLaVA.git
+    cd GeoLLaVA
+    ```
 
-2. install the necessary packages from the requirements file
-```Shell
-conda create -n geollava python=3.10
-conda activate geollava
-pip install -r requirements.txt
-```
+2. Install the necessary dependencies:
+    ```shell
+    conda create -n geollava python=3.10
+    conda activate geollava
+    pip install -r requirements.txt
+    ```
+
+---
 
 ## GeoLLaVA Custom Dataset
-[OPTIONAL] Please refer to [fMoW](https://github.com/fMoW/dataset?tab=readme-ov-file) for downloading the original dataset images.
-The cleaned annotations can be found in the [Annotations]() section.
 
-> [!IMPORTANT]
-> The full 100k annotations are too large, and are available on [Drive](https://mbzuaiac-my.sharepoint.com/:f:/g/personal/hosam_elgendy_mbzuai_ac_ae/Es2IRaXpBPRAk2gX6J5IDsgBBttITHCHbxpr4FIcRVWleg?e=pCKhFH)
+[OPTIONAL] Please refer to the [fMoW dataset](https://github.com/fMoW/dataset?tab=readme-ov-file) for the original remote sensing dataset. We provide cleaned annotations in the [Annotations]() section below.
 
-The videos used in this work can be found on [Drive](https://mbzuaiac-my.sharepoint.com/:f:/g/personal/hosam_elgendy_mbzuai_ac_ae/Es2IRaXpBPRAk2gX6J5IDsgBBttITHCHbxpr4FIcRVWleg?e=pCKhFH) and can be unzipped with:
+> **Note:** The full 100K annotations are too large for direct download and can be accessed via [Drive](https://mbzuaiac-my.sharepoint.com/:f:/g/personal/hosam_elgendy_mbzuai_ac_ae/Es2IRaXpBPRAk2gX6J5IDsgBBttITHCHbxpr4FIcRVWleg?e=pCKhFH).
 
-```Shell
+The videos used in this project can also be found on [Drive](https://mbzuaiac-my.sharepoint.com/:f:/g/personal/hosam_elgendy_mbzuai_ac_ae/Es2IRaXpBPRAk2gX6J5IDsgBBttITHCHbxpr4FIcRVWleg?e=pCKhFH) and unzipped using the following commands:
+
+```shell
 unzip updated_train_videos.zip
 unzip updated_val_videos.zip
 ```
 
-The overall layout in the GeoLLaVA folder should be:
-
+Your directory structure should look like this:
 ```
 GeoLLaVA
 ├── annotations
-|    ├──updated_train_annotations.json
-|    ├──updated_val_annotations.json
+|    ├── updated_train_annotations.json
+|    ├── updated_val_annotations.json
 ├── updated_train_videos
 |    ├── airport_hangar_0_4-airport_hangar_0_2.mp4
 |    |   .....
@@ -63,99 +68,44 @@ GeoLLaVA
 ├── llavanext_finetune.py
 ├── videollava_finetune.py
 ├── videollava_test.py
-...   
+...
 ```
 
-## Train
+## Training
 
-GeoChat training consists of visual instruction tuning using GeoChat_Instruct Dataset: 318k Vicuna-generated multimodal instruction-following data, finetuned over the pretrained weights of LlaVA-v1.5.
+To fine-tune the model on the dataset, run the `videollava_finetune.py` or `llavanext_finetune.py` scripts, depending on your model configuration.
 
-We train GeoChat on 3 A100 GPUs with 40GB memory. To train on fewer GPUs, you can reduce the `per_device_train_batch_size` and increase the `gradient_accumulation_steps` accordingly. Always keep the global batch size the same: `per_device_train_batch_size` x `gradient_accumulation_steps` x `num_gpus`.
-
-### Hyperparameters
-We use a similar set of hyperparameters as Vicuna in finetuning.  Both hyperparameters used in pretraining and finetuning are provided below.
-
-| Hyperparameter | Global Batch Size | Learning rate | Epochs | Max length | Weight decay |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| GeoChat-7B | 144 | 2e-5 | 1 | 2048 | 0 |
-
-### Pretrain (feature alignment)
-
-We use the pretrained projector from LLaVAv1.5, which is trained on 558K subset of the LAION-CC-SBU dataset with BLIP captions. It takes around 3.5 hours for LLaVA-v1.5-7B.
-
-- `--mm_projector_type mlp2x_gelu`: the two-layer MLP vision-language connector.
-- `--vision_tower openai/clip-vit-large-patch14-336`: CLIP ViT-L/14 336px.
-
-### Visual Instruction Tuning
-
-1. Prepare data
-
-Please download the annotation of the final mixture of our instruction tuning data [GeoChat_Instruct.json](https://huggingface.co/datasets/MBZUAI/GeoChat_Instruct/blob/main/GeoChat_Instruct.json), and download the split image zips from the [hugging face](https://huggingface.co/datasets/MBZUAI/GeoChat_Instruct). Save the multiple image zips in a single folder and run the following command to merge them:
-```Shell
-cat images_parta* > images.zip
+Example for Video-LLaVA:
+```shell
+python videollava_finetune.py --config configs/videollava.yaml
 ```
-Unzip the images.zip file to a folder and give the folder's path in [finetune_lora.sh](https://github.com/mbzuai-oryx/GeoChat/blob/main/scripts/finetune_lora.sh).
 
-2. Start training!
-
-Visual instruction tuning takes more time due to the increased resolution of CLIP to 504X504. It takes around ~25 hours to finetune GeoChat-7B on 3x A100 (40G).
-
-Training script with DeepSpeed ZeRO-3: [`finetune_lora.sh`](https://github.com/mbzuai-oryx/GeoChat/blob/main/scripts/finetune_lora.sh).
-
-Options to note:
-
-- `--mm_projector_type mlp2x_gelu`: the two-layer MLP vision-language connector.
-- `--vision_tower openai/clip-vit-large-patch14-336`: CLIP ViT-L/14 336px.
-- `--image_aspect_ratio pad`: this pads the non-square images to square, instead of cropping them; it slightly reduces hallucination.
-- `--group_by_modality_length True`: this should only be used when your instruction tuning dataset contains both language (e.g. ShareGPT) and multimodal (e.g. LLaVA-Instruct).
-- 
 ## Evaluation
 
-We evaluate GeoChat on a diverse set of 7 benchmarks. To ensure the reproducibility, we evaluate the models with greedy decoding. We do not evaluate using beam search to make the inference process consistent with the chat demo of real-time outputs.
-See [Evaluation.md](https://github.com/mbzuai-oryx/GeoChat/blob/main/docs/Evaluation.md).
+To evaluate the fine-tuned models on the test dataset, use the following commands:
 
-## 🏆 Contributions
-
-- **RS multimodal instruction following dataset.** We present a novel data generation pipeline, to leverage existing object detection dataset to create short descriptions of the images, followed by using Vicuna-v1.5 to create conversations using the generated text alone. Further, we add visual question-answering and scene classification abilities 
- using their corresponding datasets. This results in a total of 318k instruction pairs for RS domain.
-- **GeoChat.** Leveraging our dataset, we finetune LLaVA-1.5 to create the remote sensing-domain vision-language model - GeoChat. Our LoRA fine-tuning is efficient and avoids forgetting the necessary context embedded in fully-tuned LLaVA model, whose MLP projection is trained to align images into the word embedding space of the LLM (Vicuna-v1.5). This allows GeoChat to retain the conversation and instruction following abilities of LLaVA and extend its domain-knowledge to remote sensing tasks.  
-
-- **Evaluation Benchmark.** We also address the lack of evaluation benchmarks to assess the capability of existing VLMs on remote-sensing conversations. To this end, we setup evaluation protocols for conversation grounding in RS, as well as a setup a suite of tasks to allow comparisons with future efforts in this direction. We show various supervised as well as  zero-shot evaluations for different remote sensing tasks, including image captioning, visual question answering and scene classification to demonstrate the generalisability of GeoChat conversational VLM.
-
----
-## 👁️💬 GeoChat : Grounded Large Vision-Language Model for Remote Sensing
-
-GeoChat can accomplish multiple tasks for remote-sensing (RS) image comprehension in a unified framework. Given suitable task tokens and user queries, the model can generate visually grounded responses (text with corresponding object locations - shown on top), visual question answering on images and regions (top left and bottom right, respectively) as well as scene classification (top right) and normal natural language conversations (bottom). This makes it the first RS VLM with grounding capability. 
-
-<p align="center">
-  <img src="images/overview2.png" alt="GeoChat Overview">
-</p>
-
----
-
-## 🛰️ GeoChat : Architecture
-
-An overview of GeoChat - the first grounded large vision-language model for remote sensing. Given an image input together with a user query, a visual backbone is first used to encode patch-level tokens at a higher resolution via interpolating positional encodings. A multi-layer perceptron (MLP) is used to adapt vision-tokens to language space suitable for input to a Large Language Model (Vicuna 1.5). Besides visual inputs, region locations can also be input to the model together with task-specific prompts that specify the desired task required by the user. Given this context, the LLM can generate natural language responses interleaved with corresponding object locations. GeoChat can perform multiple tasks as shown on top e.g., scene classification, image/region captioning, VQA and grounded conversations.
-
-<p align="center">
-  <img src="images/architecture.png" alt="GeoChat Architectural">
-</p>
-
----
-
-## 📜 Citation
-```bibtex
-  @article{kuckreja2023geochat,
-          title={GeoChat: Grounded Large Vision-Language Model for Remote Sensing},
-          author={Kuckreja, Kartik and Danish, Muhammad S. and Naseer, Muzammal and Das, Abhijit and Khan, Salman and Khan, Fahad S.},
-          journal={The IEEE/CVF Conference on Computer Vision and Pattern Recognition},
-          year={2024}
-  }
+For Video-LLaVA:
+```shell
+python videollava_test.py --config configs/videollava_test.yaml
 ```
-## 🙏 Acknowledgement
-We are thankful to LLaVA and Vicuna for releasing their models and code as open-source contributions.
 
----
-[<img src="images/IVAL_logo.png" width="200" height="100">](https://www.ival-mbzuai.com)
-[<img src="images/Oryx_logo.png" width="100" height="100">](https://github.com/mbzuai-oryx)
-[<img src="images/MBZUAI_logo.png" width="360" height="85">](https://mbzuai.ac.ae)
+For LLaVA-NeXT:
+```shell
+python llavanext_eval.py --config configs/llavanext_test.yaml
+```
+
+These commands will run the evaluation on the specified test dataset and generate performance metrics, including ROUGE, BLEU, and BERT scores. The results will help assess the model's performance in detecting temporal changes in remote sensing data.
+
+## Results
+
+We evaluated the performance of GeoLLaVA across various metrics, including ROUGE, BLEU, and BERT scores. The fine-tuned model demonstrated significant improvements in capturing and describing temporal changes in geographical landscapes.
+
+| Model           | ROUGE-1 | ROUGE-2 | ROUGE-L | BLEU  | BERT  |
+|-----------------|---------|---------|---------|-------|-------|
+| Video-LLaVA     | 0.576   | 0.226   | 0.325   | 0.250 | 0.863 |
+| LLaVA-NeXT      | 0.562   | 0.199   | 0.300   | 0.239 | 0.864 |
+
+These metrics illustrate how well the models performed in describing temporal changes in remote sensing data, with fine-tuning techniques like LoRA and QLoRA leading to notable improvements.
+
+
+
