@@ -1,628 +1,203 @@
-# GeoLLaVA [![Cult Of Martians][cult-img]][cult]
+# GeoLLaVA: Efficient Fine-Tuned Vision-Language Models for Temporal Change Detection in Remote Sensing 🌍
 
 
 GeoLLaVA aims to enhance vision-language models for detecting temporal changes in remote sensing data using fine-tuning techniques like LoRA and QLoRA, achieving significant improvements in accuracy for environmental and urban monitoring tasks.
 
-* **ES modules** and **tree-shaking** support.
-* Add Size Limit to **GitHub Actions**, **Circle CI** or another CI system
-  to know if a pull request adds a massive dependency.
-* **Modular** to fit different use cases: big JS applications
-  that use their own bundler or small npm libraries with many files.
-* Can calculate **the time** it would take a browser
-  to download and **execute** your JS. Time is a much more accurate
-  and understandable metric compared to the size in bytes.
-* Calculations include **all dependencies and polyfills**
-  used in your JS.
-
-<p align="center">
-  <img src="./img/example.png" alt="Size Limit CLI" width="738">
+#### [Hosam Elgendy](), [Ahmed Sharshar](), [Ahmed Aboeitta](), [Yasser Ashraf]() and [Mohsen Guizani]()
+#### Mohamed bin Zayed University of AI (MBZUAI)
+---
+<p align='center'>
+<img src="assets/Overview.jpg" height="400">
 </p>
 
-With **[GitHub action]** Size Limit will post bundle size changes as a comment
-in pull request discussion.
-
-<p align="center">
-<img src="https://raw.githubusercontent.com/andresz1/size-limit-action/master/assets/pr.png"
-  alt="Size Limit comment in pull request about bundle size changes"
-  width="686" height="289">
-</p>
-
-With `--why`, Size Limit can tell you *why* your library is of this size
-and show the real cost of all your internal dependencies.
-We are using [Statoscope] for this analysis.
-
-<p align="center">
-  <img src="./img/why.png" alt="Statoscope example" width="650">
-</p>
-
-<p align="center">
-  <a href="https://evilmartians.com/?utm_source=size-limit">
-    <img src="https://evilmartians.com/badges/sponsored-by-evil-martians.svg"
-         alt="Sponsored by Evil Martians" width="236" height="54">
-  </a>
-</p>
-
-[GitHub action]: https://github.com/andresz1/size-limit-action
-[Statoscope]:    https://github.com/statoscope/statoscope
-[cult-img]:      http://cultofmartians.com/assets/badges/badge.svg
-[cult]:          http://cultofmartians.com/tasks/size-limit-config.html
-
-## Who Uses Size Limit
-
-* [MobX](https://github.com/mobxjs/mobx)
-* [Material-UI](https://github.com/callemall/material-ui)
-* [Ant Design](https://github.com/ant-design/ant-design/)
-* [Autoprefixer](https://github.com/postcss/autoprefixer)
-* [PostCSS](https://github.com/postcss/postcss) reduced
-  [25% of the size](https://github.com/postcss/postcss/commit/150edaa42f6d7ede73d8c72be9909f0a0f87a70f).
-* [Browserslist](https://github.com/browserslist/browserslist) reduced
-  [25% of the size](https://github.com/browserslist/browserslist/commit/640b62fa83a20897cae75298a9f2715642531623).
-* [EmojiMart](https://github.com/missive/emoji-mart) reduced
-  [20% of the size](https://github.com/missive/emoji-mart/pull/111)
-* [nanoid](https://github.com/ai/nanoid) reduced
-  [33% of the size](https://github.com/ai/nanoid/commit/036612e7d6cc5760313a8850a2751a5e95184eab).
-* [React Focus Lock](https://github.com/theKashey/react-focus-lock) reduced
-  [32% of the size](https://github.com/theKashey/react-focus-lock/pull/48).
-* [Logux](https://github.com/logux) reduced
-  [90% of the size](https://github.com/logux/logux-client/commit/62b258e20e1818b23ae39b9c4cd49e2495781e91).
-
-
-## How It Works
-
-1. Size Limit contains a CLI tool, 3 plugins (`file`, `webpack`, `time`)
-   and 3 plugin presets for popular use cases (`app`, `big-lib`, `small-lib`).
-   A CLI tool finds plugins in `package.json` and loads the config.
-2. If you use the `webpack` plugin, Size Limit will bundle your JS files into
-   a single file. It is important to track dependencies and webpack polyfills.
-   It is also useful for small libraries with many small files and without
-   a bundler.
-3. The `webpack` plugin creates an empty webpack project, adds your library
-   and looks for the bundle size difference.
-4. The `time` plugin compares the current machine performance with that of
-   a low-priced Android devices to calculate the CPU throttling rate.
-5. Then the `time` plugin runs headless Chrome (or desktop Chrome if it’s
-   available) to track the time a browser takes to compile and execute your JS.
-   Note that these measurements depend on available resources and might
-   be unstable. [See here](https://github.com/mbalabash/estimo/issues/5)
-   for more details.
-
-
-## Usage
-
-### JS Applications
-
-Suitable for applications that have their own bundler and send the JS bundle
-directly to a client (without publishing it to npm). Think of a user-facing app
-or website, like an email client, a CRM, a landing page or a blog with
-interactive elements, using React/Vue/Svelte lib or vanilla JS.
-
-<details><summary><b>Show instructions</b></summary>
-
-1. Install the preset:
-
-    ```sh
-    npm install --save-dev size-limit @size-limit/file
-    ```
-
-2. Add the `size-limit` section and the `size` script to your `package.json`:
-
-    ```diff
-    + "size-limit": [
-    +   {
-    +     "path": "dist/app-*.js"
-    +   }
-    + ],
-      "scripts": {
-        "build": "webpack ./webpack.config.js",
-    +   "size": "npm run build && size-limit",
-        "test": "vitest && eslint ."
-      }
-    ```
-
-3. Here’s how you can get the size for your current project:
-
-    ```sh
-    $ npm run size
-
-      Package size: 30.08 kB with all dependencies, minified and brotlied
-    ```
-
-4. Now, let’s set the limit. Add 25% to the current total size and use that as
-   the limit in your `package.json`:
-
-    ```diff
-      "size-limit": [
-        {
-    +     "limit": "35 kB",
-          "path": "dist/app-*.js"
-        }
-      ],
-    ```
-
-5. Add the `size` script to your test suite:
-
-    ```diff
-      "scripts": {
-        "build": "webpack ./webpack.config.js",
-        "size": "npm run build && size-limit",
-    -   "test": "vitest && eslint ."
-    +   "test": "vitest && eslint . && npm run size"
-      }
-    ```
-
-6. If you don’t have a continuous integration service running, don’t forget
-   to add one — start with Github Actions.
-
-</details>
-
-
-### JS Application and Time-based Limit
-
-File size limit (in kB) is not the best way to describe your JS application
-cost for developers. Developers will compare the size of the JS bundle
-with the size of images. But browsers need much more time to parse 100 kB
-of JS than 100 kB of an image since JS compilers are very complex.
-
-This is why Size Limit support time-based limit. It runs headless Chrome
-to track the time a browser takes to compile and execute your JS.
-
-<details><summary><b>Show instructions</b></summary>
-
-1. Install the preset:
-
-    ```sh
-    npm install --save-dev size-limit @size-limit/preset-app
-    ```
-
-2. Add the `size-limit` section and the `size` script to your `package.json`:
-
-    ```diff
-    + "size-limit": [
-    +   {
-    +     "path": "dist/app-*.js"
-    +   }
-    + ],
-      "scripts": {
-        "build": "webpack ./webpack.config.js",
-    +   "size": "npm run build && size-limit",
-        "test": "vitest && eslint ."
-      }
-    ```
-
-3. Here’s how you can get the size for your current project:
-
-    ```sh
-    $ npm run size
-
-      Package size: 30.08 kB with all dependencies, minified and brotlied
-      Loading time: 602 ms   on slow 3G
-      Running time: 214 ms   on Snapdragon 410
-      Total time:   815 ms
-    ```
-
-4. Now, let’s set the limit. Add 25% to the current total time and use that as
-   the limit in your `package.json`:
-
-    ```diff
-      "size-limit": [
-        {
-    +     "limit": "1 s",
-          "path": "dist/app-*.js"
-        }
-      ],
-    ```
-
-5. Add the `size` script to your test suite:
-
-    ```diff
-      "scripts": {
-        "build": "webpack ./webpack.config.js",
-        "size": "npm run build && size-limit",
-    -   "test": "vitest && eslint ."
-    +   "test": "vitest && eslint . && npm run size"
-      }
-    ```
-
-6. If you don’t have a continuous integration service running, don’t forget
-   to add one — start with Github Actions.
-
-</details>
-
-
-### Big Libraries
-
-JS libraries > 10 kB in size.
-
-This preset includes headless Chrome, and will measure your lib’s execution
-time. You likely don’t need this overhead for a small 2 kB lib, but for larger
-ones the execution time is a more accurate and understandable metric that
-the size in bytes. Libraries like [React] are good examples for this preset.
-
-<details><summary><b>Show instructions</b></summary>
-
-1. Install preset:
-
-    ```sh
-    npm install --save-dev size-limit @size-limit/preset-big-lib
-    ```
-
-2. Add the `size-limit` section and the `size` script to your `package.json`:
-
-    ```diff
-    + "size-limit": [
-    +   {
-    +     "path": "dist/react.production-*.js"
-    +   }
-    + ],
-      "scripts": {
-        "build": "webpack ./scripts/rollup/build.js",
-    +   "size": "npm run build && size-limit",
-        "test": "vitest && eslint ."
-      }
-    ```
-
-3. If you use ES modules you can test the size after tree-shaking with `import`
-   option:
-
-    ```diff
-      "size-limit": [
-        {
-          "path": "dist/react.production-*.js",
-    +     "import": "{ createComponent }"
-        }
-      ],
-    ```
-
-4. Here’s how you can get the size for your current project:
-
-    ```sh
-    $ npm run size
-
-      Package size: 30.08 kB with all dependencies, minified and brotlied
-      Loading time: 602 ms   on slow 3G
-      Running time: 214 ms   on Snapdragon 410
-      Total time:   815 ms
-    ```
-
-5. Now, let’s set the limit. Add 25% to the current total time and use that
-   as the limit in your `package.json`:
-
-    ```diff
-      "size-limit": [
-        {
-    +     "limit": "1 s",
-          "path": "dist/react.production-*.js"
-        }
-      ],
-    ```
-
-6. Add a `size` script to your test suite:
-
-    ```diff
-      "scripts": {
-        "build": "rollup ./scripts/rollup/build.js",
-        "size": "npm run build && size-limit",
-    -   "test": "vitest && eslint ."
-    +   "test": "vitest && eslint . && npm run size"
-      }
-    ```
-
-7. If you don’t have a continuous integration service running, don’t forget
-   to add one — start with Github Actions.
-8. Add the library size to docs, it will help users to choose your project:
-
-    ```diff
-      # Project Name
-
-      Short project description
-
-      * **Fast.** 10% faster than competitor.
-    + * **Small.** 15 kB (minified and brotlied).
-    +   [Size Limit](https://github.com/ai/size-limit) controls the size.
-    ```
-
-</details>
-
-
-### Small Libraries
-
-JS libraries < 10 kB in size.
-
-This preset will only measure the size, without the execution time, so it’s
-suitable for small libraries. If your library is larger, you likely want
-the Big Libraries preset above. [Nano ID] or [Storeon] are good examples
-for this preset.
-
-<details><summary><b>Show instructions</b></summary>
-
-1. First, install `size-limit`:
-
-    ```sh
-    npm install --save-dev size-limit @size-limit/preset-small-lib
-    ```
-
-2. Add the `size-limit` section and the `size` script to your `package.json`:
-
-    ```diff
-    + "size-limit": [
-    +   {
-    +     "path": "index.js"
-    +   }
-    + ],
-      "scripts": {
-    +   "size": "size-limit",
-        "test": "vitest && eslint ."
-      }
-    ```
-
-3. Here’s how you can get the size for your current project:
-
-    ```sh
-    $ npm run size
-
-      Package size: 177 B with all dependencies, minified and brotlied
-    ```
-
-4. If your project size starts to look bloated, run `--why` for analysis:
-
-    ```sh
-    npm run size -- --why
-    ```
-
-    > We use [Statoscope](https://github.com/statoscope/statoscope) as bundle analyzer.
-
-5. Now, let’s set the limit. Determine the current size of your library,
-   add just a little bit (a kilobyte, maybe) and use that as the limit
-   in your `package.json`:
-
-    ```diff
-     "size-limit": [
-        {
-    +     "limit": "9 kB",
-          "path": "index.js"
-        }
-     ],
-    ```
-
-6. Add the `size` script to your test suite:
-
-    ```diff
-      "scripts": {
-        "size": "size-limit",
-    -   "test": "vitest && eslint ."
-    +   "test": "vitest && eslint . && npm run size"
-      }
-    ```
-
-7. If you don’t have a continuous integration service running, don’t forget
-   to add one — start with Github Actions.
-8. Add the library size to docs, it will help users to choose your project:
-
-    ```diff
-      # Project Name
-
-      Short project description
-
-      * **Fast.** 10% faster than competitor.
-    + * **Small.** 500 bytes (minified and brotlied). No dependencies.
-    +   [Size Limit](https://github.com/ai/size-limit) controls the size.
-    ```
-
-</details>
-
-[Storeon]: https://github.com/ai/storeon/
-[Nano ID]: https://github.com/ai/nanoid/
-[React]: https://github.com/facebook/react/
-
-
-## Reports
-
-Size Limit has a [GitHub action] that comments and rejects pull requests based
-on Size Limit output.
-
-1. Install and configure Size Limit as shown above.
-2. Add the following action inside `.github/workflows/size-limit.yml`
-
-```yaml
-name: "size"
-on:
-  pull_request:
-    branches:
-      - master
-jobs:
-  size:
-    runs-on: ubuntu-latest
-    env:
-      CI_JOB_NUMBER: 1
-    steps:
-      - uses: actions/checkout@v1
-      - uses: andresz1/size-limit-action@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+---
+## Contents
+- [Setup](#setup)
+- [Dataset](#dataset)
+- [Finetune](#train)
+- [Evaluation](#evaluation)
+
+## Setup
+
+1. Clone this repository 
+```shell
+git clone https://github.com/HosamGen/GeoLLaVA.git
+cd GeoLLaVA
 ```
 
+2. install the necessary packages from the requirements file
+```Shell
+conda create -n geollava python=3.10
+conda activate geollava
+pip install -r requirements.txt
+```
 
-## Config
+## GeoLLaVA Custom Dataset
+Please refer to [Model Zoo](https://github.com/mbzuai-oryx/GeoChat/blob/main/docs/MODEL_ZOO.md) for the original dataset images.
+The cleaned annotations can be found in the [Annotations]() section.
 
-### Plugins and Presets
+> [!IMPORTANT]
+> The full 100k annotations are too large, and are available on [Drive](https://mbzuaiac-my.sharepoint.com/:f:/g/personal/hosam_elgendy_mbzuai_ac_ae/Es2IRaXpBPRAk2gX6J5IDsgBBttITHCHbxpr4FIcRVWleg?e=pCKhFH)
 
-Plugins or plugin presets will be loaded automatically from `package.json`.
-For example, if you want to use `@size-limit/webpack`, you can just use
-`npm install --save-dev @size-limit/webpack`, or you can use our preset
-`@size-limit/preset-big-lib`.
+The videos can be found on [Drive](https://mbzuaiac-my.sharepoint.com/:f:/g/personal/hosam_elgendy_mbzuai_ac_ae/Es2IRaXpBPRAk2gX6J5IDsgBBttITHCHbxpr4FIcRVWleg?e=pCKhFH) and can be unzipped with:
 
-Plugins:
+```Shell
+unzip updated_train_videos.zip
+unzip updated_val_videos.zip
+```
 
-* `@size-limit/file` checks the size of files with Brotli (default), Gzip
-  or without compression.
-* `@size-limit/webpack` adds your library to empty webpack project
-  and prepares bundle file for `file` plugin.
-* `@size-limit/webpack-why` adds reports for `webpack` plugin
-  about your library is of this size to show the cost of all your
-  dependencies.
-* `@size-limit/webpack-css` adds css support for `webpack` plugin.
-* `@size-limit/esbuild` is like `webpack` plugin, but uses `esbuild`
-  to be faster and use less space in `node_modules`.
-* `@size-limit/esbuild-why` add reports for `esbuild` plugin
-  about your library is of this size to show the cost of all your
-  dependencies.
-* `@size-limit/time` uses headless Chrome to track time to execute JS.
+## Train
 
-Plugin presets:
+GeoChat training consists of visual instruction tuning using GeoChat_Instruct Dataset: 318k Vicuna-generated multimodal instruction-following data, finetuned over the pretrained weights of LlaVA-v1.5.
 
-* `@size-limit/preset-app` contains `file` and `time` plugins.
-* `@size-limit/preset-big-lib` contains `webpack`, `file`, and `time` plugins.
-* `@size-limit/preset-small-lib` contains `esbuild` and `file` plugins.
+We train GeoChat on 3 A100 GPUs with 40GB memory. To train on fewer GPUs, you can reduce the `per_device_train_batch_size` and increase the `gradient_accumulation_steps` accordingly. Always keep the global batch size the same: `per_device_train_batch_size` x `gradient_accumulation_steps` x `num_gpus`.
+
+### Hyperparameters
+We use a similar set of hyperparameters as Vicuna in finetuning.  Both hyperparameters used in pretraining and finetuning are provided below.
+
+| Hyperparameter | Global Batch Size | Learning rate | Epochs | Max length | Weight decay |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| GeoChat-7B | 144 | 2e-5 | 1 | 2048 | 0 |
+
+### Pretrain (feature alignment)
+
+We use the pretrained projector from LLaVAv1.5, which is trained on 558K subset of the LAION-CC-SBU dataset with BLIP captions. It takes around 3.5 hours for LLaVA-v1.5-7B.
+
+- `--mm_projector_type mlp2x_gelu`: the two-layer MLP vision-language connector.
+- `--vision_tower openai/clip-vit-large-patch14-336`: CLIP ViT-L/14 336px.
+
+### Visual Instruction Tuning
+
+1. Prepare data
+
+Please download the annotation of the final mixture of our instruction tuning data [GeoChat_Instruct.json](https://huggingface.co/datasets/MBZUAI/GeoChat_Instruct/blob/main/GeoChat_Instruct.json), and download the split image zips from the [hugging face](https://huggingface.co/datasets/MBZUAI/GeoChat_Instruct). Save the multiple image zips in a single folder and run the following command to merge them:
+```Shell
+cat images_parta* > images.zip
+```
+Unzip the images.zip file to a folder and give the folder's path in [finetune_lora.sh](https://github.com/mbzuai-oryx/GeoChat/blob/main/scripts/finetune_lora.sh).
+
+2. Start training!
+
+Visual instruction tuning takes more time due to the increased resolution of CLIP to 504X504. It takes around ~25 hours to finetune GeoChat-7B on 3x A100 (40G).
+
+Training script with DeepSpeed ZeRO-3: [`finetune_lora.sh`](https://github.com/mbzuai-oryx/GeoChat/blob/main/scripts/finetune_lora.sh).
+
+Options to note:
+
+- `--mm_projector_type mlp2x_gelu`: the two-layer MLP vision-language connector.
+- `--vision_tower openai/clip-vit-large-patch14-336`: CLIP ViT-L/14 336px.
+- `--image_aspect_ratio pad`: this pads the non-square images to square, instead of cropping them; it slightly reduces hallucination.
+- `--group_by_modality_length True`: this should only be used when your instruction tuning dataset contains both language (e.g. ShareGPT) and multimodal (e.g. LLaVA-Instruct).
+- 
+## Evaluation
+
+We evaluate GeoChat on a diverse set of 7 benchmarks. To ensure the reproducibility, we evaluate the models with greedy decoding. We do not evaluate using beam search to make the inference process consistent with the chat demo of real-time outputs.
+See [Evaluation.md](https://github.com/mbzuai-oryx/GeoChat/blob/main/docs/Evaluation.md).
+
+## 🏆 Contributions
+
+- **RS multimodal instruction following dataset.** We present a novel data generation pipeline, to leverage existing object detection dataset to create short descriptions of the images, followed by using Vicuna-v1.5 to create conversations using the generated text alone. Further, we add visual question-answering and scene classification abilities 
+ using their corresponding datasets. This results in a total of 318k instruction pairs for RS domain.
+- **GeoChat.** Leveraging our dataset, we finetune LLaVA-1.5 to create the remote sensing-domain vision-language model - GeoChat. Our LoRA fine-tuning is efficient and avoids forgetting the necessary context embedded in fully-tuned LLaVA model, whose MLP projection is trained to align images into the word embedding space of the LLM (Vicuna-v1.5). This allows GeoChat to retain the conversation and instruction following abilities of LLaVA and extend its domain-knowledge to remote sensing tasks.  
+
+- **Evaluation Benchmark.** We also address the lack of evaluation benchmarks to assess the capability of existing VLMs on remote-sensing conversations. To this end, we setup evaluation protocols for conversation grounding in RS, as well as a setup a suite of tasks to allow comparisons with future efforts in this direction. We show various supervised as well as  zero-shot evaluations for different remote sensing tasks, including image captioning, visual question answering and scene classification to demonstrate the generalisability of GeoChat conversational VLM.
+
+---
+## 👁️💬 GeoChat : Grounded Large Vision-Language Model for Remote Sensing
+
+GeoChat can accomplish multiple tasks for remote-sensing (RS) image comprehension in a unified framework. Given suitable task tokens and user queries, the model can generate visually grounded responses (text with corresponding object locations - shown on top), visual question answering on images and regions (top left and bottom right, respectively) as well as scene classification (top right) and normal natural language conversations (bottom). This makes it the first RS VLM with grounding capability. 
+
+<p align="center">
+  <img src="images/overview2.png" alt="GeoChat Overview">
+</p>
+
+---
+
+## 🛰️ GeoChat : Architecture
+
+An overview of GeoChat - the first grounded large vision-language model for remote sensing. Given an image input together with a user query, a visual backbone is first used to encode patch-level tokens at a higher resolution via interpolating positional encodings. A multi-layer perceptron (MLP) is used to adapt vision-tokens to language space suitable for input to a Large Language Model (Vicuna 1.5). Besides visual inputs, region locations can also be input to the model together with task-specific prompts that specify the desired task required by the user. Given this context, the LLM can generate natural language responses interleaved with corresponding object locations. GeoChat can perform multiple tasks as shown on top e.g., scene classification, image/region captioning, VQA and grounded conversations.
+
+<p align="center">
+  <img src="images/architecture.png" alt="GeoChat Architectural">
+</p>
+
+---
+
+## 🔍 RS Multimodal Instruction Dataset
+
+Types of annotations available in the GeoChat instruction-set. For a given RS image, we obtain object attribute and relationship information, referring expressions and region captions along with their corresponding region annotations (shown over the image). This structured information is used to create the rich instruction-set with a total of 318k image-instruction pairs.
+
+<p align="center">
+  <img src="images/dataset.png" alt="Dataset Annotation Pipeline">
+</p>
 
 
-#### Third-Party Plugins
 
-Third-party plugins and presets named starting with `size-limit-` are also supported.
-For example:
+## 🤖 Qualitative results of GeoChat
 
-* [`size-limit-node-esbuild`](https://github.com/un-ts/size-limit/tree/main/packages/node-esbuild)
-  is like `@size-limit/esbuild` but for Node libraries.
-* [`size-limit-preset-node-lib`](https://github.com/un-ts/size-limit/tree/main/packages/preset-node-lib)
-  is like `@size-limit/preset-small-lib` but for Node libraries which contains
-  above `node-esbuild` and core `file` plugins.
-* [`nx-size-limit`](https://github.com/LironHazan/nx-size-limit)
-  is an [NX](https://nx.dev/community) build system community plugin.
+Qualitative results of GeoChat. (<em>left-right</em>) Results are shown on grounding, referring object detection, and disaster/damage detection. The user can provide task-specific tokens (e.g., <strong>[grounding]</strong>) to shape model responses according to the desired behavior. The model can generate textual responses (<em>right</em>), only visual grounding (<em>center</em>) and both text and object groundings interleaved together (<em>left</em>). The model can also specify object types, object counts, object attributes and object relationships.
+<p align="center">
+  <img src="images/examples.png" alt="Results_GCG">
+</p>
 
+---
 
-### Limits Config
+## 🤖 Visual Question Answering
+Qualitative examples for Visual Question Answering tasks. GeoChat is able to hold multi-turn conversations, based on various types of questions, including presence, count, complex comparisons and so on. It is able to detect objects and hold conversations against low resolution images as well.
+<p align="center">
+  <img src="images/vqa.jpg" alt="Visual Question Answering">
+</p>
 
-Size Limits supports three ways to define limits config.
+---
 
-1. `size-limit` section in `package.json`:
+## 🤖 Scene Classification
+Qualitative examples for scene classification. We give the model all the classes from the dataset and ask to choose only one.
+<p align="center">
+  <img src="images/scene.jpg" alt="Visual Question Answering">
+</p>
 
-   ```json
-     "size-limit": [
-       {
-         "path": "index.js",
-         "import": "{ createStore }",
-         "limit": "500 ms"
-       }
-     ]
-   ```
+---
 
-2. or a separate `.size-limit.json` config file:
+## 🤖 Grounded Description
+When asked to describe the image with the special token '[grounding]', GeoChat outputs both the description of the image as well as the bounding boxes for all the objects detected.
+<p align="center">
+  <img src="images/grounded.jpg" alt="Grounded Description">
+</p>
 
-   ```js
-   [
-     {
-       "path": "index.js",
-       "import": "{ createStore }",
-       "limit": "500 ms"
-     }
-   ]
-   ```
+---
 
-3. or a more flexible `.size-limit.js` or `.size-limit.cjs` config file:
+## 🤖 Referring Expression
+When asked about an object as a referred expression, GeoChat is able to locate it and draw rotated bounding boxes around it correspondingly.
+<p align="center">
+  <img src="images/ref1.jpg" alt="Referring Expression">
+</p>
+<p align="center">
+  <img src="images/ref_2.jpg" alt="Referring Expression">
+</p>
 
-   ```js
-   module.exports = [
-     {
-       path: "index.js",
-       import: "{ createStore }",
-       limit: "500 ms"
-     }
-   ]
-   ```
+---
 
-4. or types `.size-limit.ts`:
+## 🤖 Region Caption
+Qualitative examples for region-based captioning. Given a bounding box, GeoChat is able to provide brief descriptions about the area or the object covered by the bounding box.
+<p align="center">
+  <img src="images/iden.jpg" alt="Region Caption">
+</p>
 
-   ```ts
-   import type { SizeLimitConfig } from '../../packages/size-limit'
+---
 
-   module.exports = [
-     {
-       path: "index.js",
-       import: "{ createStore }",
-       limit: "500 ms"
-     }
-   ] satisfies SizeLimitConfig
-   ```
-
-Each section in the config can have these options:
-
-* **path**: relative paths to files. The only mandatory option.
-  It could be a path `"index.js"`, a [pattern] `"dist/app-*.js"`
-  or an array `["index.js", "dist/app-*.js", "!dist/app-exclude.js"]`.
-* **import**: partial import to test tree-shaking. It could be `"{ lib }"`
-  to test `import { lib } from 'lib'`, `*` to test all exports,
-  or `{ "a.js": "{ a }", "b.js": "{ b }" }` to test multiple files.
-* **limit**: size or time limit for files from the `path` option. It should be
-  a string with a number and unit, separated by a space.
-  Format: `100 B`, `10 kB`, `500 ms`, `1 s`.
-* **name**: the name of the current section. It will only be useful
-  if you have multiple sections.
-* **entry**: when using a custom webpack config, a webpack entry could be given.
-  It could be a string or an array of strings.
-  By default, the total size of all entry points will be checked.
-* **webpack**: with `false` it will disable webpack.
-* **running**: with `false` it will disable calculating running time.
-* **gzip**: with `true` it will use Gzip compression and disable
-  Brotli compression.
-* **brotli**: with `false` it will disable any compression.
-* **config**: a path to a custom webpack config.
-* **ignore**: an array of files and dependencies to exclude from
-  the project size calculation.
-* **modifyWebpackConfig**: (.size-limit.js only) function that can be used
-  to do last-minute changes to the webpack config, like adding a plugin.
-* **compareWith**: path to `stats.json` from another build to compare
-  (when `--why` is using).
-* **uiReports**: custom UI reports list (see [Statoscope docs]).
-
-If you use Size Limit to track the size of CSS files, make sure to set
-`webpack: false`. Otherwise, you will get wrong numbers, because webpack
-inserts `style-loader` runtime (≈2 kB) into the bundle.
-
-[Statoscope docs]: https://github.com/statoscope/statoscope/tree/master/packages/webpack-plugin#optionsreports-report
-[pattern]: https://github.com/SuperchupuDev/tinyglobby
-
-## Analyze with `--why`
-
-You can run `size-limit --why` to analyze the bundle.
-
-You will need to install `@size-limit/esbuild-why` or `@size-limit/webpack-why`
-depends on which bundler you are using (default is `esbuild`).
-
-For `@size-limit/esbuild-why`,
-it will generate a `esbuild-why.html` at the current directory & open it in the browser.
-
-If you also specify `--save-bundle <DIR>`,
-the report will be generated inside `<DIR>`.
-
-If you have multiple sections in your config,
-the files will be named `esbuild-why-{n}.html`,
-or you can give it a custom name:
-
-```jsonc
-[
-  {
-    "name": "cjs",
-    /* snap */
-  },
-  {
-    "name": "esm",
-    /* snap */
+## 📜 Citation
+```bibtex
+  @article{kuckreja2023geochat,
+          title={GeoChat: Grounded Large Vision-Language Model for Remote Sensing},
+          author={Kuckreja, Kartik and Danish, Muhammad S. and Naseer, Muzammal and Das, Abhijit and Khan, Salman and Khan, Fahad S.},
+          journal={The IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+          year={2024}
   }
-]
 ```
+## 🙏 Acknowledgement
+We are thankful to LLaVA and Vicuna for releasing their models and code as open-source contributions.
 
-This will produce `esbuild-why-cjs.html` and `esbuild-why-esm.html` respectively.
-
-For `@size-limit/webpack-why`,
-it will generate the report and open it in the browser automatically.
-
-## JS API
-
-```js
-const sizeLimit = require('size-limit')
-const filePlugin = require('@size-limit/file')
-const webpackPlugin = require('@size-limit/webpack')
-
-sizeLimit([filePlugin, webpackPlugin], [filePath]).then(result => {
-  result //=> { size: 12480 }
-})
-```
+---
+[<img src="images/IVAL_logo.png" width="200" height="100">](https://www.ival-mbzuai.com)
+[<img src="images/Oryx_logo.png" width="100" height="100">](https://github.com/mbzuai-oryx)
+[<img src="images/MBZUAI_logo.png" width="360" height="85">](https://mbzuai.ac.ae)
