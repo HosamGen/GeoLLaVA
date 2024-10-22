@@ -46,6 +46,26 @@ unzip updated_train_videos.zip
 unzip updated_val_videos.zip
 ```
 
+The overall layout in the GeoLLaVA folder should be:
+
+```
+GeoLLaVA
+├── annotations
+|    ├──updated_train_annotations.json
+|    ├──updated_val_annotations.json
+├── updated_train_videos
+|    ├── airport_hangar_0_4-airport_hangar_0_2.mp4
+|    |   .....
+├── updated_val_videos
+|    ├── airport_hangar_0_4-airport_hangar_0_1.mp4
+|    |   .....
+├── llavanext_eval.py
+├── llavanext_finetune.py
+├── videollava_finetune.py
+├── videollava_test.py
+...   
+```
+
 ## Train
 
 GeoChat training consists of visual instruction tuning using GeoChat_Instruct Dataset: 318k Vicuna-generated multimodal instruction-following data, finetuned over the pretrained weights of LlaVA-v1.5.
