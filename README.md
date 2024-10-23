@@ -43,7 +43,8 @@ GeoLLaVA is designed to enhance vision-language models (VLMs) for detecting temp
 
 [OPTIONAL] Please refer to the [fMoW dataset](https://github.com/fMoW/dataset?tab=readme-ov-file) for the original remote sensing dataset. We provide cleaned annotations in the [Annotations]() section below.
 
-> **Note:** The full 100K annotations are too large for direct download and can be accessed via [Drive](https://mbzuaiac-my.sharepoint.com/:f:/g/personal/hosam_elgendy_mbzuai_ac_ae/Es2IRaXpBPRAk2gX6J5IDsgBBttITHCHbxpr4FIcRVWleg?e=pCKhFH).
+> [!NOTE]
+> The full 100K annotations are too large for direct download and can be accessed via [Drive](https://mbzuaiac-my.sharepoint.com/:f:/g/personal/hosam_elgendy_mbzuai_ac_ae/Es2IRaXpBPRAk2gX6J5IDsgBBttITHCHbxpr4FIcRVWleg?e=pCKhFH).
 
 The videos used in this project can also be found on [Drive](https://mbzuaiac-my.sharepoint.com/:f:/g/personal/hosam_elgendy_mbzuai_ac_ae/Es2IRaXpBPRAk2gX6J5IDsgBBttITHCHbxpr4FIcRVWleg?e=pCKhFH) and unzipped using the following commands:
 
@@ -75,9 +76,31 @@ GeoLLaVA
 
 To fine-tune the model on the dataset, run the `videollava_finetune.py` or `llavanext_finetune.py` scripts, depending on your model configuration.
 
-Example for Video-LLaVA:
+For Video-LLaVA:
 ```shell
-python videollava_finetune.py --config configs/videollava.yaml
+python videollava_finetune.py
+```
+
+For LLaVA-NeXT:
+```shell
+python llavanext_finetune.py
+```
+
+Modify parameters such as:
+```shell
+MAX_LENGTH = 256
+USE_LORA = False
+USE_QLORA = True 
+USE_8BIT = False 
+PRUNE = False 
+prune_amount = 0.05 
+MODEL_TYPE = "sample" #for 10k sample dataset
+# MODEL_TYPE = "full" #for the full 100k dataset
+batch_size = 2
+
+#lora parameters
+lora_r = 64
+lora_alpha = 128
 ```
 
 ## Evaluation
@@ -86,13 +109,16 @@ To evaluate the fine-tuned models on the test dataset, use the following command
 
 For Video-LLaVA:
 ```shell
-python videollava_test.py --config configs/videollava_test.yaml
+python videollava_test.py
 ```
 
 For LLaVA-NeXT:
 ```shell
-python llavanext_eval.py --config configs/llavanext_test.yaml
+python llavanext_eval.py
 ```
+
+> [!IMPORTANT]
+> The MODEL_PATH must be changed during evaluation based on the model that was finetuned.
 
 These commands will run the evaluation on the specified test dataset and generate performance metrics, including ROUGE, BLEU, and BERT scores. The results will help assess the model's performance in detecting temporal changes in remote sensing data.
 
@@ -100,10 +126,33 @@ These commands will run the evaluation on the specified test dataset and generat
 
 We evaluated the performance of GeoLLaVA across various metrics, including ROUGE, BLEU, and BERT scores. The fine-tuned model demonstrated significant improvements in capturing and describing temporal changes in geographical landscapes.
 
-| Model           | ROUGE-1 | ROUGE-2 | ROUGE-L | BLEU  | BERT  |
-|-----------------|---------|---------|---------|-------|-------|
-| Video-LLaVA     | 0.576   | 0.226   | 0.325   | 0.250 | 0.863 |
-| LLaVA-NeXT      | 0.562   | 0.199   | 0.300   | 0.239 | 0.864 |
+## Video-LLaVA Results
+
+| Model                | ROUGE-1 | ROUGE-2 | ROUGE-L | BLEU  | BERT  |
+|----------------------|---------|---------|---------|-------|-------|
+| **Base**             | 0.211   | 0.041   | 0.122   | 0.039 | 0.456 |
+| **10K LoRA**         | 0.563   | 0.214   | 0.313   | 0.243 | 0.849 |
+| **100K LoRA**        | **0.576**   | **0.226**   | **0.325**   | **0.250** | **0.863** |
+| **10K QLoRA**        | 0.565   | 0.212   | 0.310   | 0.243 | 0.845 |
+| **100K QLoRA**       | 0.571   | 0.220   | 0.316   | **0.250** | 0.854 |
+| **10K Pruning 5%**   | 0.031   | 0.007   | 0.024   | 0.010 | 0.265 |
+| **100K Pruning 5%**  | 0.125   | 0.034   | 0.110   | 0.043 | 0.359 |
+
+## LLaVA-NeXT Results
+
+| Model                | ROUGE-1 | ROUGE-2 | ROUGE-L | BLEU  | BERT  |
+|----------------------|---------|---------|---------|-------|-------|
+| **Base**             | 0.197   | 0.037   | 0.113   | 0.042 | 0.404 |
+| **10K LoRA**         | 0.554   | 0.198   | 0.300   | 0.232 | 0.856 |
+| **100K LoRA**        | **0.562**   | 0.199   | 0.300   | **0.239** | **0.864** |
+| **10K QLoRA**        | 0.543   | 0.193   | 0.283   | 0.213 | 0.836 |
+| **100K QLoRA**       | 0.561   | **0.202**   | **0.302**   | 0.229 | 0.858 |
+| **10K Pruning 5%**   | 0.532   | 0.178   | 0.278   | 0.209 | 0.829 |
+| **100K Pruning 5%**  | 0.541   | 0.183   | 0.284   | 0.210 | 0.840 |
+
+**Final Model (100K LoRA)** | **0.556** | **0.202** | **0.290** | **0.227** | **0.850** |
+
+
 
 These metrics illustrate how well the models performed in describing temporal changes in remote sensing data, with fine-tuning techniques like LoRA and QLoRA leading to notable improvements.
 
