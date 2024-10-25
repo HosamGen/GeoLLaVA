@@ -156,5 +156,16 @@ We evaluated the performance of GeoLLaVA across various metrics, including ROUGE
 
 These metrics illustrate how well the models performed in describing temporal changes in remote sensing data, with fine-tuning techniques like LoRA and QLoRA leading to notable improvements.
 
+## Acknowledgement
+
++ [Video-LLaVA](https://github.com/PKU-YuanGroup/Video-LLaVA/) Video-LLaVA: Learning United Visual Representation by Alignment Before Projection. We have used Video-LLaVA as one of the models for finetuning.
++ [LLaVA-NeXT](https://github.com/LLaVA-VL/LLaVA-NeXT) LLaVA-NeXT: Open Large Multimodal Models. The video model was used as the second model.
++ [fMoW RGB Dataset](https://github.com/fMoW/dataset) Original fMoW dataset repo.
+
+## Citation
+please cite using this BibTeX:
+```bibtex
+    @article{}
+```
 
 
