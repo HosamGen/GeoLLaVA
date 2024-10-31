@@ -36,7 +36,10 @@ lora_r = 64
 lora_alpha = 128
 
 # Annotations and directories
-train_annotations = "./annotations/sample_annotations.json"
+if MODEL_TYPE == "sample":
+    train_annotations = "./annotations/sample_annotations.json"
+else:
+    train_annotations = "./annotations/updated_train_annotations.json"
 test_annotations = './annotations/updated_val_annotations.json'  # Needed for validation loop
 train_directory = "./updated_train_videos"
 test_directory = "./updated_val_videos"
