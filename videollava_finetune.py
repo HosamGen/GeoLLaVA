@@ -47,7 +47,11 @@ batch_size = 2
 lora_r = 64
 lora_alpha = 128
 
-train_annotations = "./annotations/sample_annotations.json"
+if MODEL_TYPE == "sample":
+    train_annotations = "./annotations/sample_annotations.json"
+else:
+    train_annotations = "./annotations/updated_train_annotations.json"
+    
 test_annotations =  './annotations/updated_val_annotations.json' #only needed for evaluating the model during the val loop (one sample)
 
 train_directory = "./updated_train_videos"
