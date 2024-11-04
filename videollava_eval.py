@@ -11,7 +11,7 @@ import time
 from transformers import AutoProcessor, BitsAndBytesConfig, VideoLlavaForConditionalGeneration
 
 # ================================================================================================
-MAX_LENGTH = 256
+MAX_LENGTH = 350
 MODEL_ID = "LanguageBind/Video-LLaVA-7B-hf"
 
 # Configuration
