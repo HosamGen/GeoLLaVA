@@ -12,7 +12,7 @@ from transformers import BitsAndBytesConfig, LlavaNextVideoForConditionalGenerat
 
 # ================================================================================================
 
-MAX_LENGTH = 256
+MAX_LENGTH = 350
 MODEL_ID = "llava-hf/LLaVA-NeXT-Video-7B-hf"
 
 # Configuration
