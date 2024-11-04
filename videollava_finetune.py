@@ -22,7 +22,7 @@ from lightning.pytorch import Trainer
 
 
 
-MAX_LENGTH = 256
+MAX_LENGTH = 350
 MODEL_ID = "LanguageBind/Video-LLaVA-7B-hf"
 MODEL_NAME = MODEL_ID.split("/")[-1]
 
