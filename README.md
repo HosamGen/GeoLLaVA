@@ -126,6 +126,8 @@ These commands will run the evaluation on the specified test dataset and generat
 
 We evaluated the performance of GeoLLaVA across various metrics, including ROUGE, BLEU, and BERT scores. The fine-tuned model demonstrated significant improvements in capturing and describing temporal changes in geographical landscapes.
 
+To calculate the scores after evaluating the models, please check the steps in the [https://github.com/HosamGen/GeoLLaVA/blob/main/Results.ipynb](Results.ipynb) notebook.
+
 ## Video-LLaVA Results
 
 | Model                | ROUGE-1 | ROUGE-2 | ROUGE-L | BLEU  | BERT  |
