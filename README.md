@@ -167,7 +167,15 @@ These metrics illustrate how well the models performed in describing temporal ch
 ## Citation
 please cite using this BibTeX:
 ```bibtex
-    @article{}
+    @misc{elgendy2024geollava,
+      title={GeoLLaVA: Efficient Fine-Tuned Vision-Language Models for Temporal Change Detection in Remote Sensing}, 
+      author={Hosam Elgendy and Ahmed Sharshar and Ahmed Aboeitta and Yasser Ashraf and Mohsen Guizani},
+      year={2024},
+      eprint={2410.19552},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2410.19552}, 
+}
 ```
 
 
