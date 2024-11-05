@@ -16,11 +16,11 @@ MODEL_ID = "LanguageBind/Video-LLaVA-7B-hf"
 
 # Configuration
 USE_BASE = False
-DEVICE = 0
+DEVICE = 5
 
 test_annotations = './annotations/updated_val_annotations.json'
 test_directory = "./updated_val_videos"
-MODEL_PATH = "./outputs/Video-LLaVA-7B-hf_demo_sample_QLORA_8bit_r64_alpha128"
+MODEL_PATH = "/home/yasser.attia/hosam.elgendy/GeoLLaVA/outputs/prune_attention_heads_Video-LLaVA-7B-hf_sample_QLORA_4bit_r64_alpha128"
 MODEL_TAG = MODEL_PATH.split("/")[-1]
 
 # ================================================================================================
@@ -62,6 +62,8 @@ def read_video_pyav(video_path, start, end):
     return np.stack([x.to_ndarray(format="rgb24") for x in frames])
 
 
+from torch.utils.data import Dataset
+
 class VideoLlavaDataset(Dataset):
     """PyTorch Dataset for VideoLlavaDataset."""
     
@@ -92,6 +94,8 @@ test_dataset_dict = {
     "video": [item['video'] for item in test_data],
     "conversations": [item['conversations'] for item in test_data],
 }
+
+from datasets import Dataset
 
 # Convert dictionaries to HuggingFace datasets
 test_dataset_tmp = Dataset.from_dict(test_dataset_dict)

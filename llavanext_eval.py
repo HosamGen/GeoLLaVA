@@ -3,9 +3,9 @@ import av
 import bisect
 import numpy as np
 import torch
-from torch.utils.data import Dataset
+
 import json
-from datasets import Dataset
+
 import math
 import time
 from transformers import BitsAndBytesConfig, LlavaNextVideoForConditionalGeneration, LlavaNextVideoProcessor
@@ -17,11 +17,11 @@ MODEL_ID = "llava-hf/LLaVA-NeXT-Video-7B-hf"
 
 # Configuration
 USE_BASE = False
-DEVICE = 0
+DEVICE = 4
 
 test_annotations = './annotations/updated_val_annotations.json'
 test_directory = "./updated_val_videos"
-MODEL_PATH = "./outputs/LLaVA-NeXT-Video-7B-hf_demo_full_QLORA_8bit_r64_alpha128"
+MODEL_PATH = "/home/yasser.attia/hosam.elgendy/GeoLLaVA/outputs/prune_attention_heads_LLaVA-NeXT-Video-7B-hf_sample_QLORA_4bit_r64_alpha128"
 MODEL_TAG = MODEL_PATH.split("/")[-1]
 
 # ================================================================================================
@@ -68,6 +68,10 @@ def collate_read_video(example, path):
     example["clip"] = clip
     return example
 
+
+from torch.utils.data import Dataset
+
+
 class LlavaNextDataset(Dataset):
     """PyTorch Dataset for LlavaNextDataset. This class takes a HuggingFace Dataset as input."""
     
@@ -97,6 +101,9 @@ test_dataset_dict = {
     "video": [item['video'] for item in test_data],
     "conversations": [item['conversations'] for item in test_data],
 }
+
+from datasets import Dataset
+
 
 # Convert dictionaries to HuggingFace datasets
 test_dataset_tmp = Dataset.from_dict(test_dataset_dict)

@@ -20,6 +20,7 @@ from transformers import AutoProcessor, BitsAndBytesConfig, VideoLlavaForConditi
 from lightning.pytorch.callbacks import ModelCheckpoint, Callback
 from lightning.pytorch import Trainer
 
+import torch.nn.utils.prune as prune
 
 
 MAX_LENGTH = 350
@@ -32,16 +33,16 @@ USE_LORA = False
 USE_QLORA = True   # <-- QLORA takes priority over LORA, change to False before changing LORA to true
 USE_8BIT = False  #Change to use 8bit configuration with qlora, otherwise, default is 4bit
 
-PRUNE = False #Change this to use pruning
+PRUNE = True #Change this to use pruning
 prune_amount = 0.05 #pruning percentage (5% here)
 
-DEVICE = 2
+DEVICE = 4
 
 #the MODEL_TYPE is used in naming the checkpoint/output model for easier reference
-MODEL_TYPE = "sample" #for 10k sample dataset
-# MODEL_TYPE = "full" #for the full 100k dataset
+# MODEL_TYPE = "sample" #for 10k sample dataset
+MODEL_TYPE = "full" #for the full 100k dataset
 
-batch_size = 2
+batch_size = 3
 
 #lora parameters
 lora_r = 64
@@ -91,14 +92,10 @@ def read_video_pyav(video_path, start, end):
     assert len(frames) == 2, f"Got {len(frames)} frames but should be 2. Check the indices: {indices};, start_id: {start_id}, end_id: {end_id}. Len of video is {len(av_timestamps)} frames."
     return np.stack([x.to_ndarray(format="rgb24") for x in frames])
 
-def collate_read_video(example, path):
-    # Some datasets have a start-end interval, so we try to get it if exists. Otherwise just set a very large end timestamp
-    clip = read_video_pyav(f'{path}/{example["video"]}', example.get("start", 1), example.get("end", 1e+10))
-    example["clip"] = clip
-    return example
-
 processor = AutoProcessor.from_pretrained(MODEL_ID)
 processor.tokenizer.padding_side = "right" # during training, one always uses padding on the right
+
+from torch.utils.data import Dataset
 
 class VideoLlavaDataset(Dataset):
     """
@@ -180,6 +177,8 @@ test_dataset_dict = {
 }
 
 
+from datasets import Dataset
+
 # Convert these dictionaries to HuggingFace datasets
 train_dataset_tmp = Dataset.from_dict(train_dataset_dict)
 test_dataset_tmp = Dataset.from_dict(test_dataset_dict)
@@ -214,6 +213,8 @@ if USE_QLORA:
         quantization_config=bnb_config,
         device_map={"": DEVICE},
     )
+
+
 elif USE_LORA:
     # LORA setup without quantization
 
@@ -242,6 +243,51 @@ else:
         device_map={"": DEVICE},
     )
 
+
+# print("Model before pruning:")
+# for name, param in model.named_parameters():
+#     print(f"{name}: {param.size()}")
+
+if PRUNE:
+        # Apply magnitude-based pruning to selected layers
+    for name, module in model.named_modules():
+        if isinstance(module, torch.nn.Linear):  # Apply pruning to all Linear layers, adjust as needed
+            prune.l1_unstructured(module, name='weight', amount=prune_amount)  # Adjust the amount as per your requirements
+            prune.remove(module, 'weight')  # Remove the pruning mask after pruning
+
+
+    #     # Verify the model’s pruned structure (optional)
+    # print("Model after pruning:")
+    # for name, param in model.named_parameters():
+    #     print(f"{name}: {param.size()}")
+
+
+    #  # Apply structured pruning to attention heads
+    # for name, module in model.named_modules():
+    #     # Identify attention modules for head pruning
+    #     if hasattr(module, 'num_heads') and hasattr(module, 'q_proj'):
+    #         # Calculate number of heads to prune based on pruning ratio
+    #         num_heads_to_prune = int(module.num_heads * prune_amount)
+    #         if num_heads_to_prune > 0:
+    #             print(f"Pruning {num_heads_to_prune} heads from {name}")
+
+    #             # Example pruning strategy: remove heads with smallest weights
+    #             # Reshape to separate heads
+    #             q_proj_weights = module.q_proj.weight.view(module.num_heads, -1).clone()  # Detach copy for modification
+    #             # Get indices of heads with the lowest L2-norm weight
+    #             # head_norms = q_proj_weights.norm(dim=1)
+    #             head_norms = q_proj_weights.float().norm(dim=1)
+
+    #             heads_to_prune = torch.topk(head_norms, num_heads_to_prune, largest=False).indices
+
+    #             # Zero out the weights of the selected heads
+    #             for head in heads_to_prune:
+    #                 q_proj_weights[head] = 0
+
+    #             # Assign pruned weights back to the q_proj layer
+    #             module.q_proj.weight.data.copy_(q_proj_weights.view_as(module.q_proj.weight))
+                
+    #             # Optional: apply similar pruning to k_proj, v_proj if needed
 
 def find_all_linear_names(model):
     cls = torch.nn.Linear
@@ -328,112 +374,6 @@ class VideoLlavaModelPLModule(L.LightningModule):
     def val_dataloader(self):
         return DataLoader(test_dataset, collate_fn=eval_collate_fn, batch_size=self.batch_size, shuffle=False, num_workers=8)
     
-## PRUNING:
-def fine_grained_prune(tensor: torch.Tensor, sparsity: float) -> torch.Tensor:
-        """
-        Magnitude-based pruning for a single tensor.
-        :param tensor: torch.(cuda.)Tensor, weight of conv/fc layer
-        :param sparsity: float, pruning sparsity
-        :return: torch.(cuda.)Tensor, mask for zeros
-        """
-        sparsity = min(max(0.0, sparsity), 1.0)  # Ensure sparsity is within bounds
-
-        if sparsity == 1.0:
-            tensor.zero_()
-            return torch.zeros_like(tensor, dtype=tensor.dtype)
-
-        elif sparsity == 0.0:
-            return torch.ones_like(tensor, dtype=tensor.dtype)
-
-        num_elements = tensor.numel()  # Total number of elements in the tensor
-        num_zeros = round(num_elements * sparsity)  # Step 1: calculate the number of zeros after pruning
-        importance = torch.abs(tensor)  # Step 2: calculate the importance of weight
-
-        if num_zeros > 0:
-            threshold, _ = torch.kthvalue(importance.view(-1), num_zeros)  # Step 3: calculate the pruning threshold
-        else:
-            threshold = torch.min(importance)
-
-        mask = torch.gt(importance, threshold).to(tensor.dtype)  # Step 4: get binary mask (1 for nonzeros, 0 for zeros)
-        tensor.mul_(mask)  # Step 5: apply mask to prune the tensor
-        return mask
-
-class FineGrainedPruner:
-    def __init__(self, model, global_sparsity: float):
-        self.global_sparsity = global_sparsity
-        self.masks = FineGrainedPruner.prune(model, global_sparsity)
-
-    @torch.no_grad()
-    def apply(self, model):
-        layers_to_skip = [
-            "vision_tower.vision_model.embeddings",
-            "language_model.lm_head",
-            "language_model.model.embed_tokens",
-            "vision_resampler",
-            "multi_modal_projector",
-            "vision_tower.vision_model.post_layernorm"
-        ]
-        for i in range(24):
-            layers_to_skip.append(f"vision_tower.vision_model.encoder.layers[{i}].mlp")
-
-        for name, param in model.named_parameters():
-            if name in self.masks:
-                if any(name.startswith(layer) for layer in layers_to_skip):
-                    continue
-                param *= self.masks[name]
-
-    @staticmethod
-    @torch.no_grad()
-    def prune(model, global_sparsity: float):
-        layers_to_skip = [
-            "vision_tower.vision_model.embeddings",
-            "language_model.lm_head",
-            "language_model.model.embed_tokens",
-            "vision_resampler",
-            "multi_modal_projector",
-            "vision_tower.vision_model.post_layernorm"
-        ]
-        for i in range(24):
-            layers_to_skip.append(f"vision_tower.vision_model.encoder.layers[{i}].mlp")
-
-        masks = {}
-        total_params = 0
-        pruned_params = 0
-
-        for name, param in model.named_parameters():
-            if any(name.startswith(layer) for layer in layers_to_skip):
-                continue  # Skip pruning this layer
-            if param.dim() > 1:  # Only prune conv and fc weights
-                mask = fine_grained_prune(param, global_sparsity)
-                masks[name] = mask
-                total_params += param.numel()
-                pruned_params += (mask == 0).sum().item()
-
-        print(f"Total parameters: {total_params}")
-        print(f"Pruned parameters: {pruned_params}")
-        print(f"Actual sparsity: {pruned_params / total_params:.2%}")
-
-        return masks
-    
-class PruningCallback(Callback):
-    def __init__(self, pruner):
-        super().__init__()
-        self.pruner = pruner
-
-    def on_train_epoch_end(self, trainer, pl_module):
-        # Apply the pruning to the model at the end of each training epoch
-        print(f"Applying pruning at the end of epoch {trainer.current_epoch}")
-        self.pruner.apply(pl_module.model)
-        
-if PRUNE:
-
-    global_sparsity = prune_amount  # Set your desired sparsity level here
-    # Ensure 'model' is defined before initializing the pruner
-    pruner = FineGrainedPruner(model, global_sparsity)
-
-    pruning_callback = PruningCallback(pruner)
-
-
 
 config = {"max_epochs": 1,
           "val_check_interval": 0.2, # how many times we want to validate during an epoch
@@ -452,8 +392,9 @@ early_stop_callback = EarlyStopping(monitor="train_loss", patience=3, verbose=Tr
 
 lora_type = "QLORA" if USE_QLORA else "LORA"
 bit_type = "8bit" if USE_8BIT else "4bit"
+prune_type = "prune_" if PRUNE else ""
 
-MODEL_PATH = f"./outputs/{MODEL_NAME}_{MODEL_TYPE}_{lora_type}_{bit_type}_r{lora_r}_alpha{lora_alpha}/"
+MODEL_PATH = f"./outputs/{prune_type}{MODEL_NAME}_{MODEL_TYPE}_{lora_type}_{bit_type}_r{lora_r}_alpha{lora_alpha}/"
 
 
 print(MODEL_PATH)
