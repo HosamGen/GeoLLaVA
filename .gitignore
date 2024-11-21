@@ -1,0 +1,5 @@
+outputs/
+results/
+
+results_prune_chnl_20.0_LLaVA-NeXT-Video-7B-hf_sample_QLORA_4bit_r64_alpha128_6epochs.json
+results_prune_chnl_80.0_LLaVA-NeXT-Video-7B-hf_sample_QLORA_4bit_r64_alpha128_1epochs.json

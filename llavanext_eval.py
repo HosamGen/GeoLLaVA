@@ -10,19 +10,28 @@ import math
 import time
 from transformers import BitsAndBytesConfig, LlavaNextVideoForConditionalGeneration, LlavaNextVideoProcessor
 
+import argparse
 # ================================================================================================
 
 MAX_LENGTH = 350
 MODEL_ID = "llava-hf/LLaVA-NeXT-Video-7B-hf"
 
-# Configuration
-USE_BASE = False
-DEVICE = 4
+# # Configuration
+# USE_BASE = False
+
+DEVICE = int(os.environ.get("CUDA_VISIBLE_DEVICES", "").split(",")[0])
+print(DEVICE)
 
 test_annotations = './annotations/updated_val_annotations.json'
-test_directory = "./updated_val_videos"
-MODEL_PATH = "/home/yasser.attia/hosam.elgendy/GeoLLaVA/outputs/prune_attention_heads_LLaVA-NeXT-Video-7B-hf_sample_QLORA_4bit_r64_alpha128"
-MODEL_TAG = MODEL_PATH.split("/")[-1]
+test_directory = "/l/users/hosam.elgendy/updated_val_videos"
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--use_base", action="store_true", default=False)
+parser.add_argument("--model_path", type=str)
+args = parser.parse_args()
+
+MODEL_TAG = args.model_path.split("/")[-1]
 
 # ================================================================================================
 
@@ -109,11 +118,11 @@ from datasets import Dataset
 test_dataset_tmp = Dataset.from_dict(test_dataset_dict)
 test_dataset = LlavaNextDataset(test_dataset_tmp, test_directory)
 
-print(MODEL_PATH)
+print(args.model_path)
 
 start_time = time.time()
 
-if USE_BASE:
+if args.use_base:
     quantization_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_compute_dtype=torch.float16
@@ -123,7 +132,7 @@ if USE_BASE:
     model = LlavaNextVideoForConditionalGeneration.from_pretrained(
         MODEL_ID,
         quantization_config=quantization_config,
-        device_map=DEVICE
+        device_map="auto",
     )
 
     results = []
@@ -160,7 +169,7 @@ else:
     print("Using local model")
 
     # Load processor and model from local directory
-    processor = LlavaNextVideoProcessor.from_pretrained(MODEL_PATH)
+    processor = LlavaNextVideoProcessor.from_pretrained(args.model_path)
 
     # Define quantization config
     quantization_config = BitsAndBytesConfig(
@@ -170,9 +179,9 @@ else:
     )
 
     model = LlavaNextVideoForConditionalGeneration.from_pretrained(
-        MODEL_PATH,
+        args.model_path,
         quantization_config=quantization_config,
-        device_map=DEVICE
+        device_map="auto",
     )
 
     results = []
