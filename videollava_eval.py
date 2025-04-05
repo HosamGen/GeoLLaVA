@@ -10,18 +10,27 @@ import math
 import time
 from transformers import AutoProcessor, BitsAndBytesConfig, VideoLlavaForConditionalGeneration
 
+import argparse
 # ================================================================================================
 MAX_LENGTH = 350
 MODEL_ID = "LanguageBind/Video-LLaVA-7B-hf"
 
-# Configuration
-USE_BASE = False
-DEVICE = 5
+# # Configuration
+# USE_BASE = False
+
+DEVICE = int(os.environ.get("CUDA_VISIBLE_DEVICES", "").split(",")[0])
+print(DEVICE)
 
 test_annotations = './annotations/updated_val_annotations.json'
-test_directory = "./updated_val_videos"
-MODEL_PATH = "/home/yasser.attia/hosam.elgendy/GeoLLaVA/outputs/prune_attention_heads_Video-LLaVA-7B-hf_sample_QLORA_4bit_r64_alpha128"
-MODEL_TAG = MODEL_PATH.split("/")[-1]
+test_directory = "/l/users/hosam.elgendy/updated_val_videos"
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--use_base", action="store_true", default=False)
+parser.add_argument("--model_path", type=str)
+args = parser.parse_args()
+
+MODEL_TAG = args.model_path.split("/")[-1]
 
 # ================================================================================================
 
@@ -101,12 +110,12 @@ from datasets import Dataset
 test_dataset_tmp = Dataset.from_dict(test_dataset_dict)
 test_dataset = VideoLlavaDataset(test_dataset_tmp, test_directory)
 
-print(MODEL_PATH)
+print(args.model_path)
 
 start_time = time.time()
 
 # Code for the base model only
-if USE_BASE:
+if args.use_base:
     quantization_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_compute_dtype=torch.float16
@@ -116,7 +125,7 @@ if USE_BASE:
     model = VideoLlavaForConditionalGeneration.from_pretrained(
         MODEL_ID,
         quantization_config=quantization_config,
-        device_map=DEVICE
+        device_map="auto"
     )
 
     results = []
@@ -155,7 +164,7 @@ else:
     print("Using local model")
 
     # Load processor and model from local directory
-    processor = AutoProcessor.from_pretrained(MODEL_PATH)
+    processor = AutoProcessor.from_pretrained(args.model_path)
     processor.tokenizer.padding_side = "right"  # during training, one always uses padding on the right
 
     # Define quantization config
@@ -167,10 +176,10 @@ else:
 
     # Load the model from local directory
     model = VideoLlavaForConditionalGeneration.from_pretrained(
-        MODEL_PATH,
+        args.model_path,
         torch_dtype=torch.float16,
         quantization_config=quantization_config,
-        device_map=DEVICE,
+        device_map="auto",
     )
 
     results = []

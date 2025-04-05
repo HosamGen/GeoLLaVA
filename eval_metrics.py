@@ -10,7 +10,7 @@ import torch
 
 # Argument parsing setup
 parser = argparse.ArgumentParser(description="Fix JSON formatting, clean 'generated' fields, and calculate metrics.")
-parser.add_argument("file_path", type=str, help="Path to the JSON file to process.")
+parser.add_argument("--file_path", type=str, help="Path to the JSON file to process.")
 args = parser.parse_args()
 file_path = args.file_path
 
