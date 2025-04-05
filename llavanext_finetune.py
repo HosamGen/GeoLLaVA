@@ -520,8 +520,6 @@ checkpoint_callback = ModelCheckpoint(
     filename="llavanext-{epoch:02d}-{train_loss:.2f}"  # Checkpoint file naming convention
 )
 
-print("MODIFIED TRAINER:")
-
 trainer = Trainer(
     default_root_dir=MODEL_PATH,
     accelerator="gpu",
