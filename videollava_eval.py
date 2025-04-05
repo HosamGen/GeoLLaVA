@@ -22,7 +22,7 @@ DEVICE = int(os.environ.get("CUDA_VISIBLE_DEVICES", "").split(",")[0])
 print(DEVICE)
 
 test_annotations = './annotations/updated_val_annotations.json'
-test_directory = "/l/users/hosam.elgendy/updated_val_videos"
+test_directory = "./updated_val_videos"
 
 
 parser = argparse.ArgumentParser()
